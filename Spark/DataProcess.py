@@ -21,17 +21,17 @@ logging.basicConfig(level=LOGGING_LEVEL,
 # -------------------------------
 # 2. MySQL 配置
 # -------------------------------
-MYSQL_HOST = os.getenv('MYSQL_HOST', 'localhost')
-MYSQL_PORT = os.getenv('MYSQL_PORT', '3306')
-MYSQL_DATABASE = os.getenv('MYSQL_DATABASE', 'stockdb')
-MYSQL_USER = os.getenv('MYSQL_USER', 'appuser')
-MYSQL_PASSWORD = os.getenv('MYSQL_PASSWORD', '123456a')
+MYSQL_HOST = os.getenv('MYSQL_HOST')
+MYSQL_PORT = os.getenv('MYSQL_PORT')
+MYSQL_DATABASE = os.getenv('MYSQL_DATABASE')
+MYSQL_USER = os.getenv('MYSQL_USER')
+MYSQL_PASSWORD = os.getenv('MYSQL_PASSWORD')
 
 # -------------------------------
 # 3. Kafka 配置
 # -------------------------------
-KAFKA_TOPIC = os.getenv('KAFKA_TOPIC', 'stock_prices')
-KAFKA_SERVER = os.getenv('KAFKA_SERVER', 'localhost:9092')
+KAFKA_TOPIC = os.getenv('KAFKA_TOPIC')
+KAFKA_SERVER = os.getenv('KAFKA_SERVER')
 
 # # -------------------------------
 # # 4. 初始化 SparkSession
@@ -39,8 +39,8 @@ KAFKA_SERVER = os.getenv('KAFKA_SERVER', 'localhost:9092')
 spark = SparkSession.builder \
     .appName("AkShareStockProcessor") \
     .config("spark.jars.packages",
-            "org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.1,"
-            "mysql:mysql-connector-java:8.0.33") \
+            "org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.3,"
+            "mysql:mysql-connector-java:8.0.32") \
     .getOrCreate()
 
 spark.sparkContext.setLogLevel("WARN")

@@ -22,11 +22,12 @@ logging.basicConfig(level=LOGGING_LEVEL, format='%(asctime)s - %(levelname)s - %
 logging.getLogger('kafka').setLevel(LOGGING_LEVEL)
 
 # 常量
-STOCK_SYMBOLS = os.getenv('STOCK_SYMBOLS', ['601127']) # 示例是中国A股的股票代码
-KAFKA_TOPIC = os.getenv('KAFKA_TOPIC', 'test1')
-KAFKA_SERVER = os.getenv('KAFKA_SERVER', 'localhost:9092')
-MAX_RETRIES = int(os.getenv('KAFKA_MAX_RETRIES', '5'))
-RETRY_DELAY = int(os.getenv('KAFKA_RETRY_DELAY', '2'))
+STOCK_SYMBOLS_STR = os.getenv('STOCK_SYMBOLS') # 示例是中国A股的股票代码
+STOCK_SYMBOLS = STOCK_SYMBOLS_STR.split(',')
+KAFKA_TOPIC = os.getenv('KAFKA_TOPIC')
+KAFKA_SERVER = os.getenv('KAFKA_SERVER')
+MAX_RETRIES = int(os.getenv('KAFKA_MAX_RETRIES'))
+RETRY_DELAY = int(os.getenv('KAFKA_RETRY_DELAY'))
 
 
 # 初始化 Kafka producer
@@ -63,7 +64,7 @@ def fetch_stock_data(symbol):
     """
     try:
         # 获取A股实时数据
-        df = ak.stock_zh_a_spot_em()
+        df = ak.stock_zh_a_spot()
         df.drop(["涨跌额", "涨跌幅", "买入", "卖出"], axis=1, inplace=True)
 
         df.rename(columns={
@@ -78,7 +79,7 @@ def fetch_stock_data(symbol):
         df = df[["代码", "开盘价", "最高价", "最低价",
                  "收盘价", "前收盘价", "成交量", "成交额"]]
 
-        stock_data = df[df['代码'].eq(symbol)]
+        stock_data = df[df['代码'].isin(symbol)]
         # stock_data = ak.stock_individual_basic_info_xq(symbol="SH601127")
         # 如果找不到股票数据，则返回None
         if stock_data.empty:
@@ -93,17 +94,17 @@ def fetch_stock_data(symbol):
 while True:
     logging.info("Current environment:", dict(os.environ))
 
-    for symbol in STOCK_SYMBOLS:
-        stock_data = fetch_stock_data(symbol)
 
-        if stock_data:
-            try:
-                # json_str = json.dumps(stock_data, ensure_ascii=False)
-                # producer.send(KAFKA_TOPIC, value=json_str.encode('utf-8'))
-                producer.send(KAFKA_TOPIC, value=stock_data)
-                logging.info(f"Fetched and sent data for {symbol}: {stock_data}")
-            except Exception as e:
-                logging.error(f"An error occurred while sending data to Kafka for {symbol}: {e}")
+    stock_data = fetch_stock_data(STOCK_SYMBOLS)
+
+    if stock_data:
+        try:
+            # json_str = json.dumps(stock_data, ensure_ascii=False)
+            # producer.send(KAFKA_TOPIC, value=json_str.encode('utf-8'))
+            producer.send(KAFKA_TOPIC, value=stock_data)
+            logging.info(f"Fetched and sent data: {stock_data}")
+        except Exception as e:
+            logging.error(f"An error occurred while sending data to Kafka: {e}")
 
     # 每60秒抓取一次数据
     time.sleep(60)
